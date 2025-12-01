@@ -1,0 +1,23 @@
+firefox
+firefox:default
+edge
+edge:Default
+edge:Profile 1
+opera
+opera:default
+brave
+brave:Default
+brave:Profile 1
+vivaldi
+vivaldi:Default
+whale
+whale:Default
+chrome
+chrome:Default
+chrome:Profile 1
+
+firefox:Personal
+firefox:Work
+firefox:Banking
+firefox::default:Personal
+firefox::Profile1:Work

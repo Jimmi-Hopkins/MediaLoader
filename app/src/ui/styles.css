@@ -1,0 +1,299 @@
+/* ===== Unified CSS (priority to 2.0, with useful 1.2 additions) ===== */
+
+/* --- Base 2.0 --- */
+body {
+    background-color: #1e1e1e;
+    color: #ddd;
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    background-color: #2b2b2b;
+    padding: 8px 10px;
+    border-bottom: 1px solid #444;
+}
+
+.header .row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+label {
+    color: #ccc;
+    font-size: 13px;
+}
+/* Стили для полей ссылок (создаются динамически в links.vbs) */
+.url-input {
+    width: 400px;
+    min-width: 800px;
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    padding: 8px 10px;
+    border-radius: 4px;
+    height: 34px;
+    box-sizing: border-box;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Для полей требующих подтверждения */
+.url-input.action-required {
+    color: #ff4444;
+    background-color: #2a2a2a;
+}
+
+/* Стиль для полей, требующих подтверждения */
+.url-input.action-required {
+    color: #ff4444;
+    background-color: #2a2a2a;
+}
+
+/* Кнопки действий */
+.url-block button {
+    margin-left: 2px;
+    padding: 2px 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+input[type="text"], input[type=text] {
+    background-color: #111;
+    color: #eee;
+    border: 1px solid #444;
+    padding: 4px 6px;
+    border-radius: 3px;
+}
+
+select, button {
+    background-color: #333;
+    color: #eee;
+    border: 1px solid #555;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#main {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 60px);
+}
+
+.sidebar {
+    width: 180px;
+    background-color: #252525;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border-right: 1px solid #444;
+    gap: 6px;
+}
+
+.sidebar button {
+    width: 100%;
+    text-align: left;
+}
+
+.list-area {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: #1a1a1a;
+}
+#urlContainer {
+	width: 800px;
+    min-width: 800px;
+    max-width: 800px;
+    position: absolute;
+    left: 200px; /* отступ после панели */
+    top: 120px;  /* чуть ниже шапки */
+    width: calc(100% - 220px);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+button {
+    background-color: #333;
+    color: #eee;
+    border: 1px solid #555;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 13px;
+}
+
+button:active {
+    background-color: #777;
+    transform: scale(0.97);
+}
+
+/* button states */
+button.active { background-color: #117733; color: #fff; border-color: #22aa55; }
+button.error  { background-color: #772222; color: #fff; border-color: #aa3333; }
+button.wait   { background-color: #555522; color: #fff; border-color: #888833; }
+
+/* --- Useful additions from 1.2 --- */
+
+/* Page padding and headings from 1.2 (kept but tuned) */
+body { padding: 10px; }
+h2 { text-align: center; color: #f7d354; margin-bottom: 12px; font-size: 16px; }
+
+.controls {
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.control-group {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    height: 34px;
+    padding-left: 150px;
+}
+
+.control-group label { width: 150px; font-size: 11px; }
+
+.url-row {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    height: 34px;
+    padding-left: 150px;
+}
+
+input[type=text] { width: 1000px; padding: 8px 10px; border-radius: 4px; border: 1px solid #555; background: #333; color: white; margin-right: 8px; height: 34px; box-sizing: border-box; font-size: 11px; }
+input[type=text]::placeholder { color: #888; font-style: italic; }
+
+.select-compact, select.small { padding: 6px; border-radius: 4px; border: 1px solid #555; background: #333; color: white; margin-right: 8px; width: 120px; font-size: 11px; height: 30px; }
+
+.quality-buttons { display: flex; align-items: center; gap: 4px; }
+
+button.audio-btn { padding: 4px 8px; min-height: 24px; min-width: 85px; background-color: #8B6914; color: #FFFFFF; border: none; border-radius: 3px; font-size: 11px; line-height: 1.2; margin-right: 4px; }
+
+button.quality-btn { background-color: #3a4a5a; }
+
+button.max { background-color: #5d2d2d; }
+
+button.orig { background-color: #2d5b4d; }
+
+button.folder { background: transparent; color: #FFD700; font-size: 24px; padding: 6px 8px; margin-left: 0; margin-right: 8px; height: 34px; display: flex; align-items: flex-end; justify-content: flex-start; text-align: left; }
+
+.proxy-history-btn { font-size: 20px; padding: 6px 2px; height: 34px; display: flex; align-items: flex-end; justify-content: center; background: transparent; border: none; }
+
+.proxy-clear-btn { font-size: 24px; padding: 6px 4px; height: 34px; display: flex; align-items: flex-end; justify-content: center; background: transparent; border: none; }
+
+button.exit { background-color: #602600; }
+
+.status { font-size: 11px; color: #aaa; margin-left: 8px; }
+
+.info { background: #2a2a2a; padding: 10px; border-radius: 4px; margin-top: 12px; font-size: 11px; line-height: 1.4; }
+
+#tempPopup {
+    position: fixed; bottom: 15px; right: 15px; background: #2d5b4d; color: white; padding: 10px 15px; border-radius: 6px; z-index: 10000; font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none; border: 1px solid #3a7a65;
+}
+
+#proxyPopup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 10001;
+}
+.proxy-group { display: flex; align-items: center; gap: 5px; }
+
+#proxyHistory { height: 34px; padding: 6px; border-radius: 4px; border: 1px solid #555; background: #333; color: white; font-size: 11px; }
+
+.proxy-empty { color: #888 ; font-style: italic; }
+
+.temp-error { background: #8B0000 ; border: 1px solid #A00000 ; }
+
+/* Info popup visual tweaks (from 1.2) */
+#infoPopup div { box-shadow: 0 0 20px rgba(247, 211, 84, 0.3); }
+#infoPopup div::-webkit-scrollbar { width: 8px; }
+#infoPopup div::-webkit-scrollbar-track { background: #333; border-radius: 4px; }
+#infoPopup div::-webkit-scrollbar-thumb { background: #f7d354; border-radius: 4px; }
+
+.info-close-btn { background: #555 ; color: #999 ; border: 1px solid #666 ; padding: 3px 8px ; border-radius: 3px ; cursor: default ; font-size: 11px ; }
+
+/* Small helpers to avoid conflicts */
+.hidden { display: none ; }
+.flex { display: flex; }
+.center { display:flex; align-items:center; justify-content:center; }
+
+
+
+#infoPanel {
+    position: absolute;
+     top: -100px;  
+    left: 120%; /* ← Выравнивание по центру относительно кнопки */
+    width: 500px; /* ← Шире */
+    height: 700px; /* ← Выше */
+    background: #2a2a2a;
+    border: 2px solid #f7d354;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.6); /* ← Тень посильнее */
+    z-index: 10002;
+ 
+    overflow-y: auto;
+    padding: 25px; /* ← Больше отступов */
+}
+
+#infoPanel.show {
+    transform: translateX(-50%) translateX(0); /* ← Показываем по центру */
+}
+
+.info-panel-content {
+    color: #ddd;
+    font-size: 13px; /* ← Чуть крупнее текст */
+    line-height: 1.5; /* ← Больше межстрочный интервал */
+    cursor: pointer;
+    height: 100%;
+}
+
+.info-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #555 ;
+    color: #999 ;
+    border: 1px solid #666 ;
+    padding: 3px 8px ;
+    border-radius: 3px ;
+    cursor: pointer ;
+    font-size: 11px ;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 10001;
+    display: none;
+}
+
+/* Playlist overlay */
+.overlay { position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:9999; }
+.playlist-window { width:900px; margin:40px auto; background:#1f1f1f; color:#fff; padding:8px; border-radius:6px; border:1px solid #333; }
+.playlist-header { font-size:18px; text-align:center; padding:6px; }
+.playlist-controls { padding:6px; display:flex; gap:8px; align-items:center; }
+.playlist-body { padding:6px; max-height:420px; overflow:auto; }
+.playlist-table th, .playlist-table td { padding:6px; border-bottom:1px solid #333; color:#ddd; }
+.playlist-table th { text-align:left; }
+#playlistSummary { font-size:13px; color:#ccc; padding-right:8px; }
+

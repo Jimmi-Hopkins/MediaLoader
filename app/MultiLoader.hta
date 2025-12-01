@@ -1,0 +1,257 @@
+<html>
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>MultiLoader: универсальный загрузчик</title>
+<HTA:APPLICATION
+  APPLICATIONNAME="MultiLoader"
+  ID="YouTubeDownloader"
+  SCROLL="no"
+  SINGLEINSTANCE="yes"
+  WINDOWSTATE="normal"
+  BORDER="thin"
+  CAPTION="yes"
+  INNERBORDER="no"
+  SHOWINTASKBAR="yes">
+       
+  <!-- Подключаем стили -->
+<link rel="stylesheet" type="text/css" href="src/ui/styles.css">
+
+		<!-- === ПОДКЛЮЧЕНИЕ СКРИПТОВ ==== -->
+<script language="VBScript" src="src/core/settings.vbs"></script>
+<script language="VBScript" src="src/core/download.vbs"></script>
+  <!-- <script language="VBScript" src="src/core/downloadauto.vbs"></script> -->
+  <script language="VBScript" src="src/core/download_universal.vbs"></script
+<script language="VBScript" src="src/core/proxy.vbs"></script>
+<script language="VBScript" src="src/ui/interface.vbs"></script>
+<script language="VBScript" src="src/utils/helpers.vbs"></script>
+<script language="VBScript" src="src/core/cookies.vbs"></script>
+<script language="VBScript" src="src/core/links.vbs"></script>
+<script language="VBScript" src="src/utils/playlistpicker.vbs"></script>
+<script language="VBScript" src="src/utils/createbat.vbs"></script>
+	<!-- === <script language="VBScript" src="src/core/downloadplaylist.vbs"></script> на перспективу==== -->
+	<!-- <script language="VBScript" src="bin/loader_template.vbs"></script>-->
+
+</head>
+
+<body onload="InitializeApp()">
+
+<!-- Основной интерфейс -->
+<div id="mainInterface">
+    <!-- Заголовок и версия -->
+    <h2>MultiLoader: универсальный загрузчик</h2>
+<div style="text-align: center; margin-top: -10px; margin-bottom: 15px;">
+    <span style="color: #f7d354; font-size: 12px;">
+        Версия 2.0 beta
+        <button onclick="UpdateFiles()" 
+                style="margin-left: 10px; padding: 3px 8px; font-size: 12px; background: #444; border: 1px solid #f7d354; border-radius: 4px; color: #f7d354; cursor: pointer;" 
+                title="Обновить yt-dlp и список поддерживаемых сайтов">
+            🔄
+        </button>
+    </span>
+</div>
+	
+    <!-- Блок настроек -->
+<div id="header" class="header">
+    <div class="row">
+        <label>Папка сохранения:</label>
+        <input type="text" id="savePath" style="width: 300px;" placeholder="Выберите папку для сохранения">
+        <button class="folder" onclick="SelectFolder()">📁</button>
+
+        <label>📺 Разрешение:</label>
+        <select id="defaultQuality">
+            <option value="max" title="Максимально доступное разрешение">ТОП</option>
+            <option value="1080">1080p</option>
+            <option value="720">720p</option>
+            <option value="480">480p</option>
+            <option value="360">360p</option>
+        </select>
+
+        <label>🎬 Формат:</label>
+       <select id="defaultFormat" onchange="VBScript:FormatSelectionChanged()">
+            <option value="auto" title="Автовыбор оптимального формата">auto</option>
+            <option value="mp4">MP4</option>
+            <option value="webm">WEBM</option>
+            <option value="mkv">MKV</option>
+            <option value="mp3" title="🎵 Только аудио (лучшее качество)">MP3</option>
+        </select>
+
+        <label title="❌ - без субтитров
+RU/EN - оригинальные субтитры (при наличии)
+🤖 - сгенерированные субтитры (если доступны)">📝 Субтитры:</label>
+<select id="subtitles" onchange="VBScript:SubtitlesChanged()">
+    <option value="none" title="Без субтитров">❌</option>
+    <option value="ru" title="Русские оригинальные (при наличии)">RU</option>
+    <option value="en" title="Английские оригинальные (при наличии)">EN</option>
+    <option value="auto" title="Сгенерированные(если доступны)">🤖</option>
+</select>
+
+<label title="Встроить отключаемые субтитры в видео"><input type="checkbox" id="embeddedSubs" checked> Встроенные</label>
+
+		    <!-- Блок авторизации (в шапке) -->
+		<label style="font-size:13px;color:#ddd;" >
+   <button id="btnAutoAuth"
+    onclick="StartAutoAuth()"
+    style="margin-left:8px;font-size:12px;"
+    title="Автоматический поиск авторизации в браузерах">
+  🔄
+</button>
+    <span id="authBrowserStatus"></span>
+  </label>
+<label title="Разрешить авторизацию.
+Рекомендуется включать только при необходимости">
+    <input type="checkbox" id="useBrowserAuth" onclick="UpdateAuthStatus()"></label>
+
+</div>
+	</div>
+</div>
+
+<!-- ================= ОСНОВНАЯ ОБЛАСТЬ ================= -->
+<div id="main">
+<div id="sidebar" class="sidebar">
+<label  title="Автоматически добавлять ссылки из буфера обмена"><input type="checkbox" id="autoCapture" checked onclick="VBScript:ToggleAutoCapture()"> 👁️ Перехват ссылок<br><br></label>
+
+<label title="Начинать загрузку сразу после добавления ссылки">
+  <input type="checkbox" id="autoDownload" onclick="ToggleAutoDownload()">🚀 Автозагрузка<br><br>
+</label>
+    <button onclick="VBScript:DownloadAll()" title="Скачать все ссылки с текущими настройками">📥 Скачать все</button>
+    <button onclick="ClearAllFields()" title="Полное удаление всех полей">🗑️ Очистить список</button>
+
+    <button id="proxyButton" onclick="ShowProxySettings()" title="Настройка прокси-сервера">🌐 Прокси</button>
+	
+      <button onclick="playlist_history()" title="История плейлистов">📓 Плейлисты</button>
+
+    <div style="position: relative; display: inline-block; width: 100%;">
+        <button onclick="ShowInfo()" title="Информация о программе и возможностях">ℹ️ &nbsp;&nbsp Информация</button>
+        
+        <!-- панель информации -->
+      <div id="infoPanel" style="display: none;" onclick="HideInfo()">
+    <div class="info-panel-content">
+        <h3 style="color: #f7d354; margin: 0 0 15px 0; text-align: center;">📚 Информация о загрузчике</h3>
+         <span style="color: #cccccc; font-size: 11px; font-style: italic; text-align: center; display: block; margin-bottom: 15px;">Кликните по этому окну для его закрытия</span>
+                <strong>🚀&nbsp;&nbsp;Основные возможности:</strong><br>
+				• Поддержка <a href="#" onclick="VBScript:ShowSupportedSites()" title="Подробнее">большинства сайтов</a> где нет DRM защиты<br>
+				• Добавление проверенных сайтов в список поддерживаемых<br>
+                • Автоперехват ссылок из буфера обмена<br>
+				• Массовая загрузка списком<br>
+				• Неограниченное количество одновременных скачиваний режиме автозагрузки<br>
+				• Автозакрытие окон только при успешном скачивании<br>
+				• Проверка ссылки на уникальность - исключение от повторной ссылки до очистки полей<br>
+				• Поддержка ссылок, требующих <a href="#" onclick="VBScript:Authorization_help()" title="Подробнее">авторизацию</a>.<br>
+				• Поддержка плейлистов (скачивание полного списка)<br>
+				
+                • Качество от 360p до ТОП (лучшее)<br>
+                • Форматы:<br>
+                <div style="margin-left: 20px;">
+                ⭐ Авто - выбор оптимального формата<br>
+                🎥 MP4 - гарантированая поддержка<br>
+                🎬 WEBM - если доступен, иначе MP4<br>
+                🎞️ MKV - если доступен, иначе MP4<br>
+				📓️ MP3 - лучшее аудио качество<br>
+                </div>
+                				
+				• Субтитры (если доступны):<br>
+                <div style="margin-left: 20px;">
+                RU - русские оригинальные<br>
+                EN - английские оригинальные<br>
+                🤖 - автоматически сгенерированные
+				✔ Внешние или отключаемые встроенные<br>
+                </div>
+				
+                <strong>🌐&nbsp;&nbsp;Поддержка прокси:</strong><br>
+                • HTTP, HTTPS, SOCKS4, SOCKS5<br>
+                • Авторизация: логин:пароль@ip:port<br>
+                • Автодобавление http:// если не указан протокол<br>
+                • История 10 последних рабочих прокси<br><br>
+                
+				• Автосохранение настроек и списков при выходе<br>
+                • Portable - не требует установки<br><br>
+                • Возможность обновления ключевых компонентов для работы<br><br>
+				
+                <strong>⚙️&nbsp;&nbsp;Требования:</strong><br>
+                • yt-dlp.exe, ffmpeg.exe, ffprobe.exe в папке bin<br>
+                • Windows 7 и выше<br><br>
+                
+                <strong>❗&nbsp;&nbsp;Важно:</strong><br>
+                • Файлы с одинаковыми именами перезаписываются<br>
+                • Окна загрузки остаются открытыми при ошибках<br>
+        		• Статусы результативности "файл скачан/присуствует/ошибка" не отображаются<br><br>
+			                
+                <strong>🔍&nbsp;&nbsp;Управление масштабом:</strong><br>
+                Ctrl + колесо мыши или Ctrl + ➕/➖<br>
+            </div>
+        </div>
+    </div>
+	  <button onclick="CreateShortcut()" title="Альтернатива для Windows 11: создает ярлык когда система не дает закрепить на панели задач">Ярлык на рабочий стол</button>
+	      <button onclick="ExitApp()" class="exit">🔚 Выход</button>
+ 	
+	<!--    <button onclick="ExitApp()" class="exit">🔚 Выход</button>
+		<button onclick="location.reload()" title="Обновить интерфейс">🔄 Обновить</button> -->
+</div>
+  <div id="urlContainer"></div>
+    <div id="listArea" class="list-area">
+	
+    </div>
+</div>
+
+<!-- Затемняющий фон -->
+<div id="overlay" class="overlay" onclick="HideInfo()"></div>
+</div>
+<!-- Всплывающие окна -->
+<div id="tempPopup"></div>
+<!-- Окно прокси -->
+<div id="proxyPopup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10001;">
+    <div style="position: absolute; top: 0%; left: 35%; margin-left: -250px; margin-top: -200px; background: #2a2a2a; padding: 20px; border-radius: 8px; width: 380px; height: 360; border: 2px solid #f7d354; overflow: auto; position: relative;"> <!-- ← добавил position: relative -->
+        <h3 style="color: #f7d354; text-align: center;">🌐 Настройки прокси</h3>
+        
+        <!-- Блок прокси -->
+        <div style="margin: 15px 0;">
+            <label style="color: #f0f0f0;">Прокси-сервер:</label>
+            <div class="proxy-group">
+                <input type="text" id="proxy" style="width: 300px;" 
+                       title="Формат: http://ip:port или http://логин:пароль@ip:port" 
+                       onfocus="ClearProxyPlaceholder()" onblur="CheckProxyPlaceholder()">
+                <select id="proxyHistory" onchange="SelectProxyFromHistory()" style="width: 300px; display: none;">
+                    <option value="--placeholder--">-- История прокси --</option>
+                </select>
+                <button class="proxy-history-btn" onclick="ToggleProxyHistory()" title="Показать/скрыть историю прокси">📜</button>
+                <button onclick="TestProxy()" title="Проверить работоспособность прокси">Тест прокси</button>
+                <button class="proxy-clear-btn" onclick="ClearProxyHistory()" title="Удалить историю прокси">🗑️</button>
+            </div>
+        </div>
+        
+        <!-- Кнопка закрытия внизу -->
+   <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; padding: 0 20px;">
+    <button onclick="HideProxySettings()">Закрыть</button>
+</div>
+    </div>
+	
+</div>
+<!-- Окно истории плейлистов -->
+<div id="playlistPopup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10002;">
+    <div style="position: absolute; top: 12%; left: 15%; background: #2a2a2a; padding: 20px; border-radius: 8px; width: 1058px; max-height: 90vh; border: 2px solid #f7d354; overflow: hidden; z-index: 10003;">
+        <h3 style="color: #f7d354; text-align: center; margin-top: 0; margin-bottom: 15px;">📓 История плейлистов</h3>
+        
+        <!-- Настройки плейлистов -->
+        <div id="playlistSettings" style="background: #333; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px;">
+            <!-- Настройки будут загружены здесь -->
+        </div>
+        
+        <!-- Список плейлистов -->
+        <div id="playlistList" style="height: 650px; overflow-y: auto; border: 1px solid #444; padding: 10px; background: #1f1f1f;">
+            <!-- Список будет загружен здесь -->
+        </div>
+        
+        <!-- Кнопки -->
+        <div style="text-align: center; padding-top: 15px;">
+            <button onclick="HidePlaylistHistory()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+    </div>
+</div>
+
+</body>
+</html>
+

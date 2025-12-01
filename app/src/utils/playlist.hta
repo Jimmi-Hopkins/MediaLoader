@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Playlist</title>
+<hta:application
+    applicationname="Playlist"
+    border="thin"
+    caption="yes"
+    showintaskbar="yes"
+    singleinstance="no"
+    sysmenu="yes"
+    windowstate="normal"
+    scroll="yes"
+/>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<link rel="stylesheet" type="text/css" href="../../src/ui/styles.css">
+<script language="VBScript" src="../../src/utils/playlistpicker.vbs"></script>
+<script language="VBScript" src="../../src/core/downloadplaylist.vbs"></script>
+<script language="VBScript" src="../../src/ui/interface.vbs"></script>
+
+<style>
+body {
+    font-family: Segoe UI, Arial, sans-serif;
+    background: #1e1e1e;
+    color: #eaeaea;
+}
+
+#header {
+    padding: 10px 15px;
+    background: #2b2b2b;
+    border-bottom: 1px solid #444;
+}
+
+#playlistTitle {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffd800;
+}
+
+#sourceUrl {
+    font-size: 12px;
+    color: #ff8080;
+    word-break: break-all;
+}
+
+#controls {
+    padding: 10px 15px;
+    background: #252525;
+    border-bottom: 1px solid #444;
+}
+
+#controls input[type=checkbox] {
+    transform: scale(1.2);
+    margin-right: 6px;
+}
+
+#controls button {
+    background: #3a3a3a;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 5px 12px;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+#controls button:hover {
+    background: #505050;
+}
+
+#playlistContainer {
+    padding: 10px 15px;
+}
+
+table.playlistTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table.playlistTable td {
+    padding: 4px 6px;
+    vertical-align: middle;
+}
+
+/* вертикальные разделители */
+table.playlistTable td + td {
+    border-left: 1px solid #444;
+}
+
+.indexCell {
+    width: 50px;
+    color: #9acd32;
+    text-align: right;
+    font-family: Consolas, monospace;
+}
+
+.titleCell {
+    width: auto;
+}
+
+.timeCell {
+    width: 80px;
+    text-align: center;
+    color: #87cefa;
+    font-family: Consolas, monospace;
+}
+
+.urlCell {
+    width: 300px;
+    font-size: 11px;
+    color: #aaaaaa;
+    word-break: break-all;
+}
+
+.checkboxCell {
+    width: 30px;
+    text-align: center;
+}
+</style>
+</head>
+
+<body onload="InitPlaylistWindow()">
+
+
+<div id="header">
+    <div id="playlistTitle">📓 Загрузка плейлиста...</div>
+    <div id="sourceUrl"></div>
+</div>
+
+<div id="playlistSettings" style="background: #333; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px;">
+    <!-- Настройки будут загружены здесь -->
+</div>
+
+<div id="controls">
+    <label class="select-all">
+        <input type="checkbox" id="selectAllBox" onclick="ToggleAllItems()" title="Выбрать/снять всё">
+    </label>
+
+    <button onclick="RestoreFromJson()" title="Восстановить сохранение">↩️ Восстановить</button>
+    <button onclick="SaveCurrentState()" title="Сохранить и обновить время">💾 Сохранить</button>
+	<button onclick="Savedownplaylist()" title="Сохранить и скачать выбранное">💾 📥 Сохранить и скачать</button>
+    <button onclick="CloseWindow()"title="Закрыть без сохранения">🚪 Закрыть</button>    
+    <span id="totalTime" style="margin-left: 20px; color: #87cefa; font-weight: bold;" title="Сохраните, чтобы обновить значение">
+       ⏱️ Общее время: 0 мин.
+    </span>
+	
+</div>
+
+<div id="playlistContainer">
+    <!-- таблица будет сгенерирована VBScript-ом -->
+</div>
+
+</body>
+</html>
