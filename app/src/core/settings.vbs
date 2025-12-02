@@ -343,7 +343,7 @@ Sub CheckAllDownloadsStatus()
     If activeDownloadsCount = 0 Then Exit Sub
 
 	
-    Dim fso, folder, files, file, fieldId, status, url
+    Dim fso, folder, files, file, fieldId, statusload, url
     Set fso = CreateObject("Scripting.FileSystemObject")
     
     If fso.FolderExists("temp\logs\") Then
@@ -357,14 +357,17 @@ Sub CheckAllDownloadsStatus()
                 ' Читаем статус
                 Dim statusFile
                 Set statusFile = fso.OpenTextFile(file.Path, 1)
-                status = Trim(statusFile.ReadLine)
+                statusload = Trim(statusFile.ReadLine)
                 statusFile.Close
                 
-                If status = "1" Or status = "0" Then
+                If statusload = "1" Or statusload = "0" Then
                     ' Нашли завершенную загрузку
                     url = GetUrlFromMetadata(fieldId)
+					
+					' ★★★ ИЩЕМ TITLE ДЛЯ ЛЮБОГО РЕЗУЛЬТАТА ★★★
+					FindAndUpdateTitle fieldId
                     
-                    If status = "1" Then
+                    If statusload = "1" Then
                         UpdateMetadataLogStatus fieldId, url, "completed"
                         UpdateStatus fieldId, url, "completed"
                         MoveCompletedFile fieldId
@@ -373,7 +376,7 @@ Sub CheckAllDownloadsStatus()
                         UpdateStatus fieldId, url, "error"
                     End If
                     
-                    ' Удаляем статус-файл и уменьшаем счетчик
+                    ' Удаляем статус-файл и уменьшаем счетчик скачиваемых url
                     fso.DeleteFile file.Path
                     DecrementDownloadsCount()
                 End If
@@ -435,3 +438,79 @@ Sub MoveCompletedFile(fieldId)
     End If
 End Sub
 
+' ★★★ ИЗВЛЕЧЕНИЕ ПОЛНОГО ИМЕНИ ФАЙЛА БЕЗ FIELDID ★★★
+Function ExtractTitleFromFileName(fileName, fieldId)
+    On Error Resume Next
+    
+    ' Просто убираем fieldId_
+    Dim title
+    title = Mid(fileName, Len(fieldId) + 2)
+    
+    ' Замена .part на .error для наглядности
+    If LCase(Right(title, 5)) = ".part" Then
+        title = Left(title, Len(title) - 5) & ".error"
+    End If
+    
+    ' Очистка от | для metadata.log
+    title = Replace(title, "|", "_")
+    
+    ExtractTitleFromFileName = title
+End Function
+
+' ★★★ ОБНОВЛЕНИЕ TITLE В METADATA ★★★
+Sub UpdateMetadataTitle(fieldId, title)
+    On Error Resume Next
+    Dim fso, logPath, tempPath, logFile, tempFile, line, arr
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    logPath = "metadata_history.log"
+    tempPath = "metadata_history.tmp"
+    
+    If Not fso.FileExists(logPath) Then Exit Sub
+    
+    Set logFile = fso.OpenTextFile(logPath, 1)
+    Set tempFile = fso.CreateTextFile(tempPath, True)
+    
+    Do Until logFile.AtEndOfStream
+        line = Trim(logFile.ReadLine)
+        If line <> "" Then
+            arr = Split(line, "|")
+            If UBound(arr) >= 4 Then
+                If arr(0) = fieldId Then
+                    arr(4) = title  ' 5-я колонка
+                    line = Join(arr, "|")
+                End If
+            End If
+            tempFile.WriteLine line
+        End If
+    Loop
+    
+    logFile.Close
+    tempFile.Close
+    
+    fso.DeleteFile logPath
+    fso.MoveFile tempPath, logPath
+End Sub
+
+' ★★★ ПОИСК И ОБНОВЛЕНИЕ TITLE ДЛЯ FIELDID ★★★
+Sub FindAndUpdateTitle(fieldId)
+    On Error Resume Next
+    Dim fso, cacheFolder, cacheFiles, cacheFile, fileName, title
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists("temp\cache\") Then Exit Sub
+    
+    Set cacheFolder = fso.GetFolder("temp\cache\")
+    Set cacheFiles = cacheFolder.Files
+    
+    For Each cacheFile In cacheFiles
+        fileName = cacheFile.Name
+        If Left(fileName, Len(fieldId) + 1) = fieldId & "_" Then
+            title = ExtractTitleFromFileName(fileName, fieldId)
+            If title <> "" Then
+                UpdateMetadataTitle fieldId, title
+            End If
+            Exit For
+        End If
+    Next
+End Sub

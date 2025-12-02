@@ -146,32 +146,7 @@ Sub LoadFieldsFromMetadataLog()
     Loop
     logFile.Close
 End Sub
-' ------------------------------
-' Восстановление поля из лога (МИНИМАЛИСТИЧНАЯ)
-' ------------------------------
-Sub RestoreUrlFieldFromLog(fieldId, url, status)
-    On Error Resume Next
-    Dim container, newDiv
-    Set container = Document.getElementById("urlContainer")
 
-    Set newDiv = Document.createElement("div")
-    newDiv.className = "url-block"
-    newDiv.id = fieldId
-
-    ' ★★★ ИСПОЛЬЗУЕМ ProcessSupportedUrl ДЛЯ СОЗДАНИЯ ПРАВИЛЬНОГО HTML ★★★
-    newDiv.innerHTML = ProcessSupportedUrl(fieldId, url)
-    
-    ' Добавляем в массив
-    If url <> "" And Not UrlExists(url) Then
-        ReDim Preserve existingUrls(UBound(existingUrls) + 1)
-        existingUrls(UBound(existingUrls)) = url
-    End If
-    
-    container.appendChild newDiv
-    
-    ' ★★★ ВОССТАНАВЛИВАЕМ СТАТУС ПОСЛЕ СОЗДАНИЯ HTML ★★★
-    RestoreStatusInUI fieldId, status
-End Sub
 ' ------------------------------
 ' Создание поля ссылки (ОБНОВЛЕННАЯ - поддерживает все статусы)
 ' ------------------------------
@@ -195,8 +170,15 @@ Sub RestoreUrlFieldFromLog(fieldId, url, status)
                " <button data-fieldid='" & fieldId & "' data-save='false' onclick='VBScript:HandleConfirmClick()' title='Подтвердить добавление ссылки'>✔</button>" & _
                " <button data-fieldid='" & fieldId & "' data-save='true' onclick='VBScript:HandleConfirmClick()' title='Подтвердить и добавить сайт в список поддерживаемых'>💾</button>" & _
                " <button onclick='VBScript:RemoveUrlField(""" & fieldId & """)' title='Удалить ссылку'>🗑️</button>"
+    ElseIf status = STATUS_PLAYLIST Then
+        ' Для плейлистов
+        html = "<input type='text' class='url-input' value='" & url & "' readonly>" & _
+               " <span id='" & fieldId & "_status' title='Плейлист'>📓</span>" & _
+               " <button data-fieldid='" & fieldId & "' onclick='VBScript:DownloadPlaylist(""" & fieldId & """)' title='Скачать плейлист'>📥</button>" & _
+               " <button data-fieldid='" & fieldId & "' onclick='VBScript:saveEditPlaylist(""" & fieldId & """)' title='Редактировать плейлист'>✏️</button>" & _
+               " <button onclick='VBScript:RemoveUrlField(""" & fieldId & """)' title='Удалить плейлист'>🗑️</button>"
     Else
-        ' Для остальных статусов используем стандартную обработку
+        ' Для остальных статусов используем стандартную обработку + кнопка 📥
         html = ProcessSupportedUrl(fieldId, url)
     End If
     
@@ -213,6 +195,7 @@ Sub RestoreUrlFieldFromLog(fieldId, url, status)
     ' ★★★ ВОССТАНАВЛИВАЕМ СТАТУС ПОСЛЕ СОЗДАНИЯ HTML ★★★
     RestoreStatusInUI fieldId, status
 End Sub
+
 ' ------------------------------
 ' Добавление нового поля (ОБНОВЛЕННАЯ)
 ' ------------------------------
@@ -245,13 +228,22 @@ Sub AddUrlField(url)
     ElseIf urlStatus = "supported" Then
         
         ' Определяем: playlist или одиночная
-  If IsPlaylistUrl(url) Then
-        startStatus = STATUS_PLAYLIST
-    Else
-        startStatus = STATUS_WAITING
-    End If
-        
-        html = ProcessSupportedUrl(fieldId, url)
+        If IsPlaylistUrl(url) Then
+            startStatus = STATUS_PLAYLIST
+            html = "<input type='text' class='url-input' value='" & url & "' readonly>" & _
+                   " <span id='" & fieldId & "_status' title='Плейлист'>📓</span>" & _
+                   " <button data-fieldid='" & fieldId & "' onclick='VBScript:DownloadPlaylist(""" & fieldId & """)' title='Скачать плейлист'>📥</button>" & _
+                   " <button data-fieldid='" & fieldId & "' onclick='VBScript:saveEditPlaylist(""" & fieldId & """)' title='Редактировать плейлист'>✏️</button>" & _
+                   " <button onclick='VBScript:RemoveUrlField(""" & fieldId & """)' title='Удалить плейлист'>🗑️</button>"
+        Else
+            startStatus = STATUS_WAITING
+            ' ★★★ ДОБАВЛЯЕМ КНОПКУ СРАЗУ ПРИ СОЗДАНИИ ПОЛЯ ★★★
+            html = "<input type='text' class='url-input' value='" & url & "' " & _
+                   "onchange='VBScript:CheckUrlStatus(""" & fieldId & """)'>" & _
+                   " <span id='" & fieldId & "_status'></span>" & _
+                   " <button onclick='VBScript:RemoveUrlField(""" & fieldId & """)' title='Удалить ссылку'>🗑️</button>" & _
+                   " <button onclick='VBScript:RedownloadVideo(""" & fieldId & """)' title='Инидивидуальное скачивание'>📥</button>"
+        End If
     End If
     
     ' Запись статуса один раз
@@ -267,9 +259,9 @@ Sub AddUrlField(url)
         existingUrls(UBound(existingUrls)) = url
         
         ' Обновляем статус рядом с полем
-      If urlStatus <> "unsupported" Then
-        CheckUrlStatus fieldId
-    End If
+        If urlStatus <> "unsupported" Then
+            CheckUrlStatus fieldId
+        End If
 
         ' АВТОЗАГРУЗКА: только если обычное supported видео
         If startStatus = STATUS_WAITING Then
@@ -287,7 +279,6 @@ Sub AddUrlField(url)
 
         End If
     End If
-
 End Sub
 
 ' ------------------------------
@@ -342,78 +333,66 @@ Sub ConfirmUrlField(fieldId, saveDomain)
         End If
     End If
     
-    ' СКРЫВАЕМ КНОПКИ ДЕЙСТВИЙ вместо пересоздания поля
-    Dim buttons, i
-    Set buttons = el.getElementsByTagName("button")
-    For i = 0 To buttons.length - 1
-        If buttons(i).getAttribute("data-fieldid") = fieldId Then
-            buttons(i).style.display = "none"
-        End If
-    Next
-    
-    ' Преобразуем поле в обычное (расставляем стили как в supported)
-    inputEl.style.color = ""  ' Убираем красный цвет
-    inputEl.readOnly = False  ' Разблокируем редактирование
-    inputEl.className = "url-input"  ' Убираем класс action-required
-    
-     ' Сначала пробуем сформировать HTML для supported (если есть функция ProcessSupportedUrl)
-    Dim supportedHtml
-    supportedHtml = ""
-    On Error Resume Next
-    supportedHtml = ProcessSupportedUrl(fieldId, url)
-    On Error Goto 0
-    
-    If supportedHtml <> "" Then
-        el.innerHTML = supportedHtml
-    End If
-    
-    ' НОВЫЙ СТАТУС
-    ' -----------------------------
+    ' Обновляем статус в логе
     Dim newStatus
     If IsPlaylistUrl(url) Then
         newStatus = STATUS_PLAYLIST
     Else
         newStatus = STATUS_WAITING
     End If
- ' -----------------------------
-    ' Обновляем HTML для supported
-    ' -----------------------------
-    el.innerHTML = ProcessSupportedUrl(fieldId, url)
-	
+    
+    ' ★★★ ОБНОВЛЯЕМ HTML С КНОПКОЙ ПОВТОРНОЙ ЗАГРУЗКИ ★★★
+    el.innerHTML = "<input type='text' class='url-input' value='" & url & "' " & _
+                   "onchange='VBScript:CheckUrlStatus(""" & fieldId & """)'>" & _
+                   " <span id='" & fieldId & "_status'></span>" & _
+                   " <button onclick='VBScript:RemoveUrlField(""" & fieldId & """)' title='Удалить ссылку'>🗑️</button>" & _
+                   " <button onclick='VBScript:RedownloadVideo(""" & fieldId & """)' title='Инидивидуальное скачивание'>📥</button>"
+    
     UpdateMetadataLogStatus fieldId, url, newStatus
     UpdateStatus fieldId, url, newStatus
-   
 End Sub
 
 
-' ★★★ ФУНКЦИЯ ПРОВЕРКИ ПЛЕЙЛИСТА ★★★
 Function ProcessSupportedUrl(fieldId, url)
     On Error Resume Next
-    Dim html, currentStatus
+    Dim html, currentStatus, title, displayText
     
     ' Получаем текущий статус из metadata_history.log
     currentStatus = GetCurrentStatus(fieldId)
+    
+    ' ★★★ ПОЛУЧАЕМ TITLE ИЗ METADATA ★★★
+    title = GetTitleFromMetadata(fieldId)
+    
+    ' ★★★ ВЫБИРАЕМ ЧТО ПОКАЗЫВАТЬ: TITLE ИЛИ URL ★★★
+    If title <> "" Then
+        displayText = title
+    Else
+        displayText = url
+    End If
         
     ' Проверяем плейлист
     If IsPlaylistUrl(url) Then
-        html = "<input type='text' class='url-input' value='" & url & "' readonly>" & _
+        html = "<input type='text' class='url-input' value='" & displayText & "' readonly>" & _
                " <span id='" & fieldId & "_status' title='Плейлист'>📓</span>" & _
                " <button data-fieldid='" & fieldId & "' onclick='VBScript:DownloadPlaylist(""" & fieldId & """)' title='Скачать плейлист'>📥</button>" & _
                " <button data-fieldid='" & fieldId & "' onclick='VBScript:saveEditPlaylist(""" & fieldId & """)' title='Редактировать плейлист'>✏️</button>" & _
                " <button onclick='VBScript:RemoveUrlField(""" & fieldId & """)' title='Удалить плейлист'>🗑️</button>"
     Else
-        html = "<input type='text' class='url-input' value='" & url & "' " & _
+        html = "<input type='text' class='url-input' value='" & displayText & "' " & _
                "onchange='VBScript:CheckUrlStatus(""" & fieldId & """)'>" & _
                " <span id='" & fieldId & "_status'></span>" & _
                " <button onclick='VBScript:RemoveUrlField(""" & fieldId & """)' title='Удалить ссылку'>🗑️</button>"
         
-          If currentStatus = "completed" Or currentStatus = "error" Then
-            html = html & " <button onclick='VBScript:RedownloadVideo(""" & fieldId & """)' title='Скачать повторно'>🔄</button>"
+        ' ★★★ ДОБАВЛЯЕМ КНОПКУ ПОВТОРНОЙ ЗАГРУЗКИ ДЛЯ ВСЕХ СТАТУСОВ ★★★
+        If currentStatus = STATUS_WAITING Or currentStatus = STATUS_DOWNLOADING Or _
+           currentStatus = STATUS_COMPLETED Or currentStatus = STATUS_ERROR Then
+            html = html & " <button onclick='VBScript:RedownloadVideo(""" & fieldId & """)' title='Инидивидуальное скачивание'>📥</button>"
         End If
     End If
     
     ProcessSupportedUrl = html
 End Function
+
 ' ★★★ ПОВТОРНОЕ СКАЧИВАНИЕ ★★★
 Sub RedownloadVideo(fieldId)
     On Error Resume Next
@@ -446,6 +425,33 @@ Function GetCurrentStatus(fieldId)
                 If UBound(arr) >= 3 Then
                     If arr(0) = fieldId Then
                         GetCurrentStatus = arr(3)  ' статус в 4-й колонке
+                        Exit Do
+                    End If
+                End If
+            End If
+        Loop
+        logFile.Close
+    End If
+End Function
+
+' ★★★ ПОЛУЧЕНИЕ TITLE ИЗ METADATA ★★★
+Function GetTitleFromMetadata(fieldId)
+    On Error Resume Next
+    Dim fso, logFile, logPath, line, arr
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    logPath = "metadata_history.log"
+    
+    GetTitleFromMetadata = ""
+    
+    If fso.FileExists(logPath) Then
+        Set logFile = fso.OpenTextFile(logPath, 1)
+        Do Until logFile.AtEndOfStream
+            line = Trim(logFile.ReadLine)
+            If line <> "" Then
+                arr = Split(line, "|")
+                If UBound(arr) >= 4 Then
+                    If arr(0) = fieldId Then
+                        GetTitleFromMetadata = arr(4)  ' title в 5-й колонке
                         Exit Do
                     End If
                 End If
