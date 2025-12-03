@@ -242,7 +242,7 @@ Sub AddUrlField(url)
                    "onchange='VBScript:CheckUrlStatus(""" & fieldId & """)'>" & _
                    " <span id='" & fieldId & "_status'></span>" & _
                    " <button onclick='VBScript:RemoveUrlField(""" & fieldId & """)' title='Удалить ссылку'>🗑️</button>" & _
-                   " <button onclick='VBScript:RedownloadVideo(""" & fieldId & """)' title='Инидивидуальное скачивание'>📥</button>"
+                   " <button onclick='VBScript:RedownloadVideo(""" & fieldId & """)' title='Индивидуальное скачивание'>📥</button>"
         End If
     End If
     
@@ -346,7 +346,7 @@ Sub ConfirmUrlField(fieldId, saveDomain)
                    "onchange='VBScript:CheckUrlStatus(""" & fieldId & """)'>" & _
                    " <span id='" & fieldId & "_status'></span>" & _
                    " <button onclick='VBScript:RemoveUrlField(""" & fieldId & """)' title='Удалить ссылку'>🗑️</button>" & _
-                   " <button onclick='VBScript:RedownloadVideo(""" & fieldId & """)' title='Инидивидуальное скачивание'>📥</button>"
+                   " <button onclick='VBScript:RedownloadVideo(""" & fieldId & """)' title='Индивидуальное скачивание'>📥</button>"
     
     UpdateMetadataLogStatus fieldId, url, newStatus
     UpdateStatus fieldId, url, newStatus
@@ -386,25 +386,59 @@ Function ProcessSupportedUrl(fieldId, url)
         ' ★★★ ДОБАВЛЯЕМ КНОПКУ ПОВТОРНОЙ ЗАГРУЗКИ ДЛЯ ВСЕХ СТАТУСОВ ★★★
         If currentStatus = STATUS_WAITING Or currentStatus = STATUS_DOWNLOADING Or _
            currentStatus = STATUS_COMPLETED Or currentStatus = STATUS_ERROR Then
-            html = html & " <button onclick='VBScript:RedownloadVideo(""" & fieldId & """)' title='Инидивидуальное скачивание'>📥</button>"
+            html = html & " <button onclick='VBScript:RedownloadVideo(""" & fieldId & """)' title='Индивидуальное скачивание'>📥</button>"
         End If
     End If
     
     ProcessSupportedUrl = html
 End Function
 
+' ★★★ ПОЛУЧЕНИЕ URL ИЗ METADATA ★★★
+Function GetUrlFromMetadata(fieldId)
+    On Error Resume Next
+    Dim fso, logFile, logPath, line, arr
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    logPath = "metadata_history.log"
+    
+    GetUrlFromMetadata = ""
+    
+    If fso.FileExists(logPath) Then
+        Set logFile = fso.OpenTextFile(logPath, 1)
+        Do Until logFile.AtEndOfStream
+            line = Trim(logFile.ReadLine)
+            If line <> "" Then
+                arr = Split(line, "|")
+                If UBound(arr) >= 2 Then
+                    If arr(0) = fieldId Then
+                        GetUrlFromMetadata = arr(2)
+                        Exit Do
+                    End If
+                End If
+            End If
+        Loop
+        logFile.Close
+    End If
+End Function
+
 ' ★★★ ПОВТОРНОЕ СКАЧИВАНИЕ ★★★
 Sub RedownloadVideo(fieldId)
     On Error Resume Next
+    
+    ' 1. Получаем URL из metadata
     Dim url
     url = GetUrlFromMetadata(fieldId)
     
-    If url <> "" Then
-        ' Меняем статус на waiting и запускаем загрузку
-        UpdateMetadataLogStatus fieldId, url, "waiting"
-        UpdateStatus fieldId, url, "waiting"
-        DownloadSingleVideo url, fieldId
+    ' 2. Если не нашли - ошибка
+    If url = "" Then
+        MsgBox "Не удалось найти URL в metadata для fieldId: " & fieldId, _
+               vbExclamation, "Ошибка"
+        Exit Sub
     End If
+    
+    ' 3. Обновляем статус и запускаем загрузку
+    UpdateMetadataLogStatus fieldId, url, "waiting"
+    UpdateStatus fieldId, url, "waiting"
+    DownloadSingleVideo url, fieldId
 End Sub
 
 ' ★★★ ПОЛУЧЕНИЕ ТЕКУЩЕГО СТАТУСА ИЗ METADATA ★★★
