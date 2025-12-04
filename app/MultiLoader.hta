@@ -14,24 +14,23 @@
   INNERBORDER="no"
   SHOWINTASKBAR="yes">
        
-  <!-- Подключаем стили -->
 <link rel="stylesheet" type="text/css" href="src/ui/styles.css">
 
-		<!-- === ПОДКЛЮЧЕНИЕ СКРИПТОВ ==== -->
 <script language="VBScript" src="src/core/settings.vbs"></script>
-<script language="VBScript" src="src/core/download.vbs"></script>
-  <!-- <script language="VBScript" src="src/core/downloadauto.vbs"></script> -->
-  <script language="VBScript" src="src/core/download_universal.vbs"></script
+<script language="VBScript" src="src/core/cookies.vbs"></script>
+<script language="VBScript" src="src/core/download_universal.vbs"></script>
 <script language="VBScript" src="src/core/proxy.vbs"></script>
 <script language="VBScript" src="src/ui/interface.vbs"></script>
 <script language="VBScript" src="src/utils/helpers.vbs"></script>
-<script language="VBScript" src="src/core/cookies.vbs"></script>
 <script language="VBScript" src="src/core/links.vbs"></script>
 <script language="VBScript" src="src/utils/playlistpicker.vbs"></script>
 <script language="VBScript" src="src/utils/createbat.vbs"></script>
-	<!-- === <script language="VBScript" src="src/core/downloadplaylist.vbs"></script> на перспективу==== -->
-	<!-- <script language="VBScript" src="bin/loader_template.vbs"></script>-->
 
+<!-- === <script language="VBScript" src="src/core/downloadplaylist.vbs"></script> 
+<!-- <script language="VBScript" src="bin/loader_template.vbs"></script>-->
+<!-- <script language="VBScript" src="src/core/downloadauto.vbs"></script> -->
+<!-- <script language="VBScript" src="src/core/download.vbs"></script>   -->
+   
 </head>
 
 <body onload="InitializeApp()">
@@ -42,7 +41,7 @@
     <h2>MultiLoader: универсальный загрузчик</h2>
 <div style="text-align: center; margin-top: -10px; margin-bottom: 15px;">
     <span style="color: #f7d354; font-size: 12px;">
-        Версия 2.0 beta
+        Версия 2.1 beta
         <button onclick="UpdateFiles()" 
                 style="margin-left: 10px; padding: 3px 8px; font-size: 12px; background: #444; border: 1px solid #f7d354; border-radius: 4px; color: #f7d354; cursor: pointer;" 
                 title="Обновить yt-dlp и список поддерживаемых сайтов">
@@ -185,8 +184,7 @@ RU/EN - оригинальные субтитры (при наличии)
 	  <button onclick="CreateShortcut()" title="Альтернатива для Windows 11: создает ярлык когда система не дает закрепить на панели задач">Ярлык на рабочий стол</button>
 	      <button onclick="ExitApp()" class="exit">🔚 Выход</button>
  	
-	<!--    <button onclick="ExitApp()" class="exit">🔚 Выход</button>
-		<button onclick="location.reload()" title="Обновить интерфейс">🔄 Обновить</button> -->
+	 <button onclick="location.reload()" title="Презапустить интерфейс">🔄 Restart</button>
 </div>
   <div id="urlContainer"></div>
     <div id="listArea" class="list-area">
