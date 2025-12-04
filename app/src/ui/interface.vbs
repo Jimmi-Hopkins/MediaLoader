@@ -363,7 +363,7 @@ End If
         
    html = html & "<div style='display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #333;'>"
         html = html & "<button onclick=""VBScript:OpenPlaylist '" & playlistId & "'"" style='flex-grow:1; text-align:left; margin-right:10px; padding:8px 12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;' title='" & title & "'>" & title & "</button>"
-   html = html & "<button onclick=""VBScript:DeletePlaylist '" & playlistId & "','" & Replace(title, "'", "''") & "'"" style='flex-shrink:0;'>🗑️</button>"
+html = html & "<button onclick=""VBScript:DeletePlaylist '" & playlistId & "','" & Replace(title, "'", "''") & "'"" style='flex-shrink:0;' title='Удалить плейлист'>🗑️</button>"
         html = html & "</div>"
     Next
     

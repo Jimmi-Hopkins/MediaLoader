@@ -1,4 +1,5 @@
-Public activeDownloadsCount, monitorInterval
+Public activeDownloadsCount, monitorInterval, detectedBrowser
+
 ' Инициализация приложения
 Sub InitializeApp()
 	On Error Resume Next
@@ -10,6 +11,7 @@ Sub InitializeApp()
     LoadSettings()
 	FormatSelectionChanged()
 	SubtitlesChanged()
+	Call UpdateAuthStatusOnLoad()
 	Call CheckAutoDownload()
     Call InitProxyPlaceholder()
     Call UpdateProxyButtonColor()

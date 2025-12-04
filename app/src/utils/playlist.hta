@@ -18,7 +18,6 @@
 <link rel="stylesheet" type="text/css" href="../../src/ui/styles.css">
 <script language="VBScript" src="../../src/utils/playlistpicker.vbs"></script>
 <script language="VBScript" src="../../src/core/downloadplaylist.vbs"></script>
-<script language="VBScript" src="../../src/ui/interface.vbs"></script>
 
 <style>
 body {
@@ -121,7 +120,7 @@ table.playlistTable td + td {
 </head>
 
 <body onload="InitPlaylistWindow()">
-
+<body onload="InitializePlaylistApp()">
 
 <div id="header">
     <div id="playlistTitle">📓 Загрузка плейлиста...</div>
@@ -129,7 +128,7 @@ table.playlistTable td + td {
 </div>
 
 <div id="playlistSettings" style="background: #333; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px;">
-    <!-- Настройки будут загружены здесь -->
+
 </div>
 
 <div id="controls">
@@ -140,15 +139,15 @@ table.playlistTable td + td {
     <button onclick="RestoreFromJson()" title="Восстановить сохранение">↩️ Восстановить</button>
     <button onclick="SaveCurrentState()" title="Сохранить и обновить время">💾 Сохранить</button>
 	<button onclick="Savedownplaylist()" title="Сохранить и скачать выбранное">💾 📥 Сохранить и скачать</button>
-    <button onclick="CloseWindow()"title="Закрыть без сохранения">🚪 Закрыть</button>    
-    <span id="totalTime" style="margin-left: 20px; color: #87cefa; font-weight: bold;" title="Сохраните, чтобы обновить значение">
-       ⏱️ Общее время: 0 мин.
+	    <button onclick="CloseWindow()"title="Закрыть без сохранения">🚪 Закрыть</button>  
+	       <span id="totalTime" style="margin-left: 20px; color: #87cefa; font-weight: bold;" title="Сохраните, чтобы обновить значение">
+       ⏱️ Время: 0 мин.
     </span>
-	
+
 </div>
 
 <div id="playlistContainer">
-    <!-- таблица будет сгенерирована VBScript-ом -->
+
 </div>
 
 </body>

@@ -161,6 +161,89 @@ Function CreateWrapperBat(fieldId, currentDir)
     CreateWrapperBat = batPath
 End Function
 
+' ==================== ПОЛУЧЕНИЕ ПАРАМЕТРОВ АВТОРИЗАЦИИ ====================
+
+Function GetBrowserAuthParams()
+    On Error Resume Next
+    Dim authCheckbox
+    
+    ' Если detectedBrowser пустой - грузим настройки
+    If detectedBrowser = "" Then
+        LoadSettings()
+    End If
+    
+    Set authCheckbox = Document.getElementById("useBrowserAuth")
+    
+    If Not authCheckbox Is Nothing And authCheckbox.Checked Then
+        If detectedBrowser <> "" Then
+            GetBrowserAuthParams = "--cookies-from-browser " & Chr(34) & detectedBrowser & Chr(34)
+        Else
+            GetBrowserAuthParams = ""
+        End If
+    Else
+        GetBrowserAuthParams = ""
+    End If
+End Function
+
+' ==================== ГЕНЕРАЦИЯ ПАРАМЕТРОВ СУБТИТРОВ ====================
+
+Function GenerateSubtitleKeys()
+    On Error Resume Next
+    Dim subtitlesSelect, embeddedSubsCheckbox, formatSelect
+    Dim subValue, embedValue, keys
+    
+    Set subtitlesSelect = Document.getElementById("subtitles")
+    Set embeddedSubsCheckbox = Document.getElementById("embeddedSubs")
+    Set formatSelect = Document.getElementById("defaultFormat")
+    
+    ' ★★★ ЕСЛИ ФОРМАТ MP3 - НЕТ СУБТИТРОВ ★★★
+    If LCase(formatSelect.value) = "mp3" Then
+        GenerateSubtitleKeys = ""
+        Exit Function
+    End If
+    
+    subValue = subtitlesSelect.value
+    embedValue = embeddedSubsCheckbox.Checked
+    
+    keys = ""
+    
+    Select Case subValue
+        Case "none"
+            keys = ""
+            
+        Case "ru", "en"
+            keys = "--write-subs --sub-langs " & subValue & " --ignore-errors"
+            If embedValue Then
+                keys = keys & " --embed-subs"
+            End If
+            
+        Case "auto"
+            keys = "--write-auto-subs" & " --ignore-errors"
+            If embedValue Then
+                keys = keys & " --embed-subs"
+            End If
+    End Select
+       
+    GenerateSubtitleKeys = keys
+End Function
+
+' ==================== ПОЛУЧЕНИЕ АДРЕСА ПРОКСИ ====================
+
+Function GetProxyAddress()
+    On Error Resume Next
+    Dim proxyField, proxy
+    Set proxyField = Document.getElementById("proxy")
+    
+    If Not proxyField Is Nothing Then
+        proxy = Trim(proxyField.value)
+        ' Убираем placeholder
+        If proxy = "http://ip:port или http://логин:пароль@ip:port" Then
+            proxy = ""
+        End If
+    End If
+    
+    GetProxyAddress = proxy
+End Function
 ' ==================== МАССОВАЯ ЗАГРУЗКА ВСЕХ WAITING ССЫЛОК ====================
 
 Sub DownloadAll()

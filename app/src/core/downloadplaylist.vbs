@@ -24,7 +24,7 @@ Sub downplaylist()
 
     Set settings = LoadPlaylistSettings()
 
-    If settings Is Nothing Then Exit Sub
+   If settings Is Nothing Then Exit Sub
 
     ' ★★★ ВСЕ ПЕРЕМЕННЫЕ ОПРЕДЕЛЕНЫ ★★★
     
@@ -292,16 +292,30 @@ Function GenerateSubtitleKeysFromSettings(settings)
     GenerateSubtitleKeysFromSettings = keys
 End Function
 
-' -----------------------
-' Получение параметра авторизации (--cookies-from-browser ...) из settings (detectedBrowser)
-' -----------------------
+' ★★★ ПОЛУЧЕНИЕ ПАРАМЕТРОВ АВТОРИЗАЦИИ С УЧЕТОМ ЧЕКБОКСА ★★★
 Function GetBrowserAuthParamsFromSettings(settings)
     On Error Resume Next
-    Dim det
-    det = ""
-    If IsObject(settings) Then
-        If settings.Exists("detectedBrowser") Then det = Trim(settings("detectedBrowser"))
+    Dim det, authCheckbox
+    
+    ' ★★★ ПРОВЕРЯЕМ ЧЕКБОКС В ИНТЕРФЕЙСЕ РЕДАКТОРА ★★★
+    On Error Resume Next
+    Set authCheckbox = Document.getElementById("usePlaylistAuth")
+    
+    ' Если чекбокс существует и выключен - авторизация отключена
+    If Not authCheckbox Is Nothing Then
+        If Not authCheckbox.Checked Then
+            GetBrowserAuthParamsFromSettings = ""
+            Exit Function
+        End If
     End If
+    
+    ' Если чекбокс включен или не существует - проверяем браузер
+    If IsObject(settings) Then
+        If settings.Exists("detectedBrowser") Then 
+            det = Trim(settings("detectedBrowser"))
+        End If
+    End If
+    
     If det <> "" Then
         GetBrowserAuthParamsFromSettings = "--cookies-from-browser " & Chr(34) & det & Chr(34)
     Else

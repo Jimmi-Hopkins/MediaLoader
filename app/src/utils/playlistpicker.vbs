@@ -301,8 +301,8 @@ Sub InitPlaylistWindow()
 
     LoadPlaylist
 	  
-
-LoadPlaylistSettingsForPlaylist()
+	DisplayPlaylistSettings()
+	InitializePlaylistAuth() 
 
 
 End Sub
@@ -734,7 +734,7 @@ Sub UpdateTotalTime()
     Dim totalTimeElement
     Set totalTimeElement = Document.getElementById("totalTime")
     If Not totalTimeElement Is Nothing Then
-        totalTimeElement.innerText = "Общее время: " & CalculateTotalTime()
+        totalTimeElement.innerText = "Время: " & CalculateTotalTime()
     End If
 End Sub
 
@@ -808,13 +808,27 @@ End Function
 
 ' ==================== НАСТРОЙКИ ДЛЯ HTA ПЛЕЙЛИСТОВ ====================
 
-Sub LoadPlaylistSettingsForPlaylist()
+' ★★★ ЗАГРУЗКА НАСТРОЕК ПЛЕЙЛИСТА (ВОЗВРАЩАЕТ СЛОВАРЬ) ★★★
+Function LoadPlaylistSettingsForPlaylist()
     On Error Resume Next
-    Dim fso, settingsPath, settings, savePath, quality, format, subsValue, embeddedFlag
+    Dim fso, settingsPath, settings, savePath, quality, format, subsValue, embeddedFlag, detectedBrowser
     Set fso = CreateObject("Scripting.FileSystemObject")
     
     ' Файл настроек в config\playlist\ относительно корня приложения
     settingsPath = "config\playlist\playlist_settings.txt"
+    
+    ' Создаем словарь для результатов
+    Dim resultDict
+    Set resultDict = CreateObject("Scripting.Dictionary")
+    
+    ' Устанавливаем значения по умолчанию
+    resultDict("savePath") = ""
+    resultDict("defaultQuality") = "360"
+    resultDict("defaultFormat") = "mp4"
+    resultDict("subtitles") = "none"
+    resultDict("embeddedSubs") = "false"
+    resultDict("detectedBrowser") = ""
+    resultDict("proxy") = ""
     
     ' Читаем настройки из файла
     If fso.FileExists(settingsPath) Then
@@ -825,40 +839,158 @@ Sub LoadPlaylistSettingsForPlaylist()
         
         settingsArray = Split(settings, "|")
         
-        ' Берем значения ИЗ ФАЙЛА
-        If UBound(settingsArray) >= 0 Then savePath = settingsArray(0)
-        If UBound(settingsArray) >= 1 Then quality = settingsArray(1)
-        If UBound(settingsArray) >= 2 Then format = settingsArray(2)
-        If UBound(settingsArray) >= 4 Then subsValue = settingsArray(4)
-        If UBound(settingsArray) >= 5 Then embeddedFlag = (settingsArray(5) = "true")
-        
-        ' Формируем отображение
-        Dim subtitlesText
-        If format = "mp3" Or subsValue = "none" Then
-            subtitlesText = "Без субтитров"
-        Else
-            If embeddedFlag Then
-                subtitlesText = "Субтитры: " & subsValue & " (встроенные)"
-            Else
-                subtitlesText = "Субтитры: " & subsValue & " (внешние)"
-            End If
+        ' Заполняем словарь значениями из файла
+        If UBound(settingsArray) >= 0 Then 
+            resultDict("savePath") = settingsArray(0)
         End If
-        
-        Dim qualityFormat
-        If format = "mp3" Then
-            qualityFormat = "🎵 " & format
-        Else
-            qualityFormat = "📺 " & quality & "p 🎬 " & format & " 📝 " & subtitlesText
+        If UBound(settingsArray) >= 1 Then 
+            resultDict("defaultQuality") = settingsArray(1)
         End If
+        If UBound(settingsArray) >= 2 Then 
+            resultDict("defaultFormat") = settingsArray(2)
+        End If
+        If UBound(settingsArray) >= 3 Then 
+            resultDict("proxy") = settingsArray(3)
+        End If
+        If UBound(settingsArray) >= 4 Then 
+            resultDict("subtitles") = settingsArray(4)
+        End If
+        If UBound(settingsArray) >= 5 Then 
+            resultDict("embeddedSubs") = settingsArray(5)
+        End If
+        ' ★★★ ВАЖНО: detectedBrowser в позиции 6 ★★★
+        If UBound(settingsArray) >= 6 Then 
+            resultDict("detectedBrowser") = Trim(settingsArray(6))
+        End If
+    End If
+    
+    ' Возвращаем словарь
+    Set LoadPlaylistSettingsForPlaylist = resultDict
+End Function
 
-        Dim html
-        html = "<div style='display: flex; justify-content: space-between; align-items: center; line-height: 1.5;'>"
-        html = html & "<div>" & "Текущие настройки:" & "&nbsp;&nbsp;"
-        html = html & qualityFormat & " 📁 " & savePath & "&nbsp;&nbsp;"
-        html = html & "</div>"
-        
-        Document.getElementById("playlistSettings").innerHTML = html
+' ★★★ ОТОБРАЖЕНИЕ НАСТРОЕК ПЛЕЙЛИСТА В ИНТЕРФЕЙСЕ ★★★
+Sub DisplayPlaylistSettings()
+    On Error Resume Next
+    
+    Dim settings
+    Set settings = LoadPlaylistSettingsForPlaylist()
+    If settings Is Nothing Then Exit Sub
+    
+    Dim savePath, quality, format, subsValue, embeddedFlag, detectedBrowser
+    
+    savePath = settings("savePath")
+    quality = settings("defaultQuality")
+    format = settings("defaultFormat")
+    subsValue = settings("subtitles")
+    embeddedFlag = settings("embeddedSubs")
+    detectedBrowser = settings("detectedBrowser")
+    
+    ' Формируем отображение
+    Dim subtitlesText
+    If format = "mp3" Or subsValue = "none" Then
+        subtitlesText = "Без субтитров"
     Else
-        Document.getElementById("playlistSettings").innerHTML = "<div style='color: #ff6b6b;'>Файл настроек не найден</div>"
+        If LCase(embeddedFlag) = "true" Then
+            subtitlesText = "Субтитры: " & subsValue & " (встроенные)"
+        Else
+            subtitlesText = "Субтитры: " & subsValue & " (внешние)"
+        End If
+    End If
+    
+    Dim qualityFormat
+    If format = "mp3" Then
+        qualityFormat = "🎵 " & format
+    Else
+        qualityFormat = "📺 " & quality & "p 🎬 " & format & " 📝 " & subtitlesText
+    End If
+
+    Dim html
+    html = "<div style='display: flex; justify-content: space-between; align-items: center; line-height: 1.5;'>"
+    html = html & "<div>" & "Текущие настройки:" & "&nbsp;&nbsp;"
+    html = html & qualityFormat & " 📁 " & savePath & "&nbsp;&nbsp;"
+    
+ ' БЛОК С ЧЕКБОКСОМ АВТОРИЗАЦИИ 
+If detectedBrowser <> "" Then
+    ' Браузер найден - добавляем чекбокс
+    html = html & " <label title='Использовать авторизацию через " & detectedBrowser & "' style='cursor:pointer;'>"
+    html = html & "<input type='checkbox' id='usePlaylistAuth' onclick='VBScript:UpdatePlaylistAuthStatus()' style='vertical-align:middle;'>"
+    html = html & "<span id='playlistAuthStatus'>" & detectedBrowser & "</span>"
+Else
+    ' Браузер не найден - только текст
+    html = html & " Не авторизован 🔒"
+End If
+
+html = html & "</div>"
+    
+    Document.getElementById("playlistSettings").innerHTML = html
+End Sub
+
+' ★★★ ИНИЦИАЛИЗАЦИЯ АВТОРИЗАЦИИ ДЛЯ РЕДАКТОРА ПЛЕЙЛИСТОВ ★★★
+Sub InitializePlaylistAuth()
+    On Error Resume Next
+    
+    ' Инициализируем только если это окно плейлиста
+    If InStr(LCase(Document.location.pathname), "playlist_") = 0 Then Exit Sub
+    
+    Dim settings, authCheckbox, statusEl
+    
+    ' Загружаем настройки плейлиста
+    Set settings = LoadPlaylistSettingsForPlaylist()
+    If settings Is Nothing Then Exit Sub
+    
+    Set authCheckbox = Document.getElementById("usePlaylistAuth")
+    Set statusEl = Document.getElementById("playlistAuthStatus")
+    
+    If Not authCheckbox Is Nothing And Not statusEl Is Nothing Then
+        Dim browserName
+        browserName = settings("detectedBrowser")
+        
+        If browserName <> "" And browserName <> "Не авторизован" Then
+            ' Браузер найден - чекбокс включен по умолчанию
+            authCheckbox.Checked = False
+            statusEl.innerText = browserName & " 🔐 выкл."
+            statusEl.style.color = "#ff6b6b"  ' красный
+        Else
+            ' Браузер не найден - чекбокс выключен
+            authCheckbox.Checked = False
+            authCheckbox.disabled = True  ' делаем неактивным
+            statusEl.innerText = "Авторизация недоступна"
+            statusEl.style.color = "#888"  ' серый
+        End If
+    End If
+End Sub
+
+'' ★★★ ОБНОВЛЕНИЕ СТАТУСА ПРИ ИЗМЕНЕНИИ ЧЕКБОКСА ★★★
+Sub UpdatePlaylistAuthStatus()
+    On Error Resume Next
+    
+    Dim authCheckbox, statusEl, settings
+    
+    Set authCheckbox = Document.getElementById("usePlaylistAuth")
+    Set statusEl = Document.getElementById("playlistAuthStatus")
+    
+    If authCheckbox Is Nothing Or statusEl Is Nothing Then Exit Sub
+    
+    ' Если чекбокс неактивен (браузер не найден) - ничего не делаем
+    If authCheckbox.disabled Then Exit Sub
+    
+    ' Загружаем настройки для получения имени браузера
+    Set settings = LoadPlaylistSettingsForPlaylist()
+    If settings Is Nothing Then Exit Sub
+    
+    Dim browserName
+    browserName = settings("detectedBrowser")
+    
+    If browserName <> "" And browserName <> "Не авторизован" Then
+        If authCheckbox.Checked Then
+            statusEl.innerText = browserName & " 🔓 вкл.  "
+            statusEl.style.color = "#4CAF50"  ' зеленый
+        Else
+            statusEl.innerText = browserName & " 🔐 выкл."
+            statusEl.style.color = "#ff6b6b"  ' красный
+        End If
+    Else
+        statusEl.innerText = "Авторизация недоступна"
+        statusEl.style.color = "#888"
     End If
 End Sub

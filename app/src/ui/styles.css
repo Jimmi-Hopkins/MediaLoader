@@ -28,8 +28,7 @@ label {
 }
 /* Стили для полей ссылок (создаются динамически в links.vbs) */
 .url-input {
-    width: 400px;
-    min-width: 800px;
+    width: 80%;
     background: #333;
     color: white;
     border: 1px solid #555;
